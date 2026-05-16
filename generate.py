@@ -31,6 +31,7 @@ DB_PATH    = Path("database") / "statum1_intelligence.db"
 MKTG_DB    = Path("database") / "statum1_marketing.db"
 STORE_URL  = "https://middleton26.gumroad.com"
 SITE_URL   = os.environ.get("SITE_URL", "https://statum1.co.uk")
+SITEMAP_BASE = os.environ.get("SITEMAP_BASE", "https://tempest1953.github.io/statum1-website")
 GA_ID      = os.environ.get("GOOGLE_ANALYTICS_ID", "GA_MEASUREMENT_ID")
 
 # Mailchimp embedded form action — set this in .env after getting your embed URL
@@ -699,11 +700,12 @@ def generate_sitemap() -> Path:
     """Generate sitemap.xml listing all static pages and blog articles."""
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
+    base = SITEMAP_BASE.rstrip("/")
     static_pages = [
-        (SITE_URL + "/",           "1.0", "weekly"),
-        (SITE_URL + "/books.html", "0.9", "weekly"),
-        (SITE_URL + "/blog.html",  "0.8", "weekly"),
-        (SITE_URL + "/about.html", "0.5", "monthly"),
+        (base + "/",           "1.0", "weekly"),
+        (base + "/books.html", "0.9", "weekly"),
+        (base + "/blog.html",  "0.8", "weekly"),
+        (base + "/about.html", "0.5", "monthly"),
     ]
 
     urls = []
@@ -719,7 +721,7 @@ def generate_sitemap() -> Path:
 
     for article_path in sorted(BLOG_DIR.glob("*.html")):
         slug = article_path.stem
-        loc  = f"{SITE_URL}/blog/{slug}.html"
+        loc  = f"{base}/blog/{slug}.html"
         # Try to read lastmod from the file's datePublished schema if present
         lastmod = today
         try:
