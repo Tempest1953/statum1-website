@@ -187,6 +187,7 @@ def _head(title: str, description: str, canonical: str, page: str = "website") -
   <title>{html.escape(title)}</title>
   <meta name="description" content="{html.escape(description)}"/>
   <meta name="robots" content="index, follow"/>
+  <meta name="google-site-verification" content="XXBjxcAy67UUSUtduBjIAr5rPdw15Xn3549xcbSfLvA"/>
   <link rel="canonical" href="{canonical}"/>
   <meta property="og:title"       content="{html.escape(title)}"/>
   <meta property="og:description" content="{html.escape(description)}"/>
