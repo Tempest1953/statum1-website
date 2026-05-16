@@ -693,6 +693,65 @@ def generate_lead_magnet_pdf() -> None:
         logger.warning("[website] Lead magnet PDF generation skipped: %s", exc)
 
 
+# ── Sitemap ────────────────────────────────────────────────────────────────────
+
+def generate_sitemap() -> Path:
+    """Generate sitemap.xml listing all static pages and blog articles."""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    static_pages = [
+        (SITE_URL + "/",           "1.0", "weekly"),
+        (SITE_URL + "/books.html", "0.9", "weekly"),
+        (SITE_URL + "/blog.html",  "0.8", "weekly"),
+        (SITE_URL + "/about.html", "0.5", "monthly"),
+    ]
+
+    urls = []
+    for loc, priority, freq in static_pages:
+        urls.append(
+            f"  <url>\n"
+            f"    <loc>{loc}</loc>\n"
+            f"    <lastmod>{today}</lastmod>\n"
+            f"    <changefreq>{freq}</changefreq>\n"
+            f"    <priority>{priority}</priority>\n"
+            f"  </url>"
+        )
+
+    for article_path in sorted(BLOG_DIR.glob("*.html")):
+        slug = article_path.stem
+        loc  = f"{SITE_URL}/blog/{slug}.html"
+        # Try to read lastmod from the file's datePublished schema if present
+        lastmod = today
+        try:
+            import re as _re
+            text = article_path.read_text(encoding="utf-8", errors="ignore")
+            m = _re.search(r'"datePublished":\s*"(\d{4}-\d{2}-\d{2})"', text)
+            if m:
+                lastmod = m.group(1)
+        except Exception:
+            pass
+        urls.append(
+            f"  <url>\n"
+            f"    <loc>{loc}</loc>\n"
+            f"    <lastmod>{lastmod}</lastmod>\n"
+            f"    <changefreq>monthly</changefreq>\n"
+            f"    <priority>0.7</priority>\n"
+            f"  </url>"
+        )
+
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "\n".join(urls)
+        + "\n</urlset>\n"
+    )
+
+    out = OUTPUT_DIR / "sitemap.xml"
+    out.write_text(xml, encoding="utf-8")
+    logger.info("[website] sitemap.xml — %d URLs", len(urls))
+    return out
+
+
 # ── Public API ─────────────────────────────────────────────────────────────────
 
 def generate_all() -> list[Path]:
@@ -705,6 +764,7 @@ def generate_all() -> list[Path]:
         generate_books(),
         generate_blog_index(),
         generate_about(),
+        generate_sitemap(),
     ]
     logger.info("[website] Full site generated (%d pages)", len(paths))
     return paths
